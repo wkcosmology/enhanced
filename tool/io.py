@@ -30,11 +30,9 @@ def data_frame2fits(filename, df, columns=None, units=None, comments=None):
     """
     if columns is None:
         columns = [list(df.columns)]
-    if units is None:
-        units = [None] * len(columns)
+    if units is None or isinstance(units, str):
+        units = [units] * len(columns)
     assert isinstance(units, list)
-    if isinstance(units[0], str) or units[0] is None:
-        units = [units]
 
     hdr = fits.Header()
     if comments is not None:
@@ -44,13 +42,13 @@ def data_frame2fits(filename, df, columns=None, units=None, comments=None):
     hdu_list = [primary_hdu]
 
     for cs, us in zip(columns, units):
-        hdu_list.append(_table2hdu_units(Table.from_pandas(df[cs]), us))
+        hdu_list.append(_table2hdu_units(Table.from_pandas(df[cs]), cs, us))
 
     hdul = fits.HDUList(hdu_list)
     hdul.writeto(filename)
 
 
-def _table2hdu_units(table, units=None):
+def _table2hdu_units(table, colnames=None, units=None):
     """convert a astropy.table.Table object to astropy.io.fits.TableHDU
 
     Parameters
@@ -58,15 +56,18 @@ def _table2hdu_units(table, units=None):
     table : :class:pandas.DataFrame
         the dataframe contains the data
     units : list, optional
-        the list of string contains the name of columsn
+        the list of string contains the name of columns
+    units : list, optional
+        the list of string contains the unit of columns
 
     Returns
     -------
     :class:astropy.io.fits.PrimaryHDU
     """
     hdu = fits.table_to_hdu(table)
-    if units is not None:
-        for c, u in zip(table.colnames, units):
+    if units is not None and colnames is not None:
+        assert isinstance(units, list)
+        for c, u in zip(colnames, units):
             fits.ColDefs(hdu).change_unit(c, u)
     return hdu
 

@@ -78,10 +78,8 @@ def binned_percentile(xs, ys, x_edges=None, num_bins=10, percens=None):
     ys = ys[mask]
     x_vals = (x_edges[1:] + x_edges[:-1]) / 2
     bin_ids = np.digitize(xs, x_edges) - 1
-    results = [
-        np.nanpercentile(ys[bin_ids == i], percens)
-        for i in range(len(x_vals))]
-    results = np.array([v if not np.isnan(v) else [np.nan] * len(percens) for v in results]).T
+    results = [np.nanpercentile(ys[bin_ids == i], percens) for i in range(len(x_vals))]
+    results = np.array([v if not np.any(np.isnan(v)) else [np.nan] * len(percens) for v in results]).T
     return np.row_stack((x_vals, results))
 
 
