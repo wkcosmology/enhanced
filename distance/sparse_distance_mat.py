@@ -7,6 +7,7 @@
 import numpy as np
 from scipy.sparse import coo_matrix
 from halotools.mock_observables.pair_counters import pairwise_distance_xy_z
+from enhanced.tool.io import sparse_matrix2fits
 from halotools.mock_observables.pair_counters import pairwise_distance_3d
 from enhanced.tool.checker import check_columns_in_dataframe
 from grouptools.utilities.halo_model import HaloProfile
@@ -177,3 +178,17 @@ class HaloGalaxyDistanceMatrix(SparseDistanceMatrix):
             self._halos["z"].values[self.row],
             self._sigma_zs)
         return self.copy(prof_val)
+
+    def save(self, filename):
+        """save the distance matrix to a fits file
+
+        Parameters
+        ----------
+        filename : TODO
+
+        Returns
+        -------
+        TODO
+
+        """
+        pass

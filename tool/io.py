@@ -72,6 +72,23 @@ def _table2hdu_units(table, colnames=None, units=None):
     return hdu
 
 
+def fits2data_frame(filename):
+    """read the pandas data frame from a fits file
+
+    Parameters
+    ----------
+    filename : str
+        the filepath and name of the fits file
+
+    Returns
+    -------
+    :class: pandas.DataFrame
+        the pandas dataframe in the fits file
+
+    """
+    return Table.read(filename).to_pandas()
+
+
 def sparse_matrix2fits(row_pos, col_pos, mat_list, filename, comments=None):
     """store the sparse matrix into a fits file
 
@@ -105,7 +122,9 @@ def sparse_matrix2fits(row_pos, col_pos, mat_list, filename, comments=None):
 
     for mat in mat_list:
         mat = mat.tocoo()
-        df = pd.DataFrame(data=np.column_stack((mat.row, mat.col, mat.data)), columns="row col data".split())
+        df = pd.DataFrame(
+            data=np.column_stack((mat.row, mat.col, mat.data)),
+            columns="row col data".split())
         hdu = fits.table_to_hdu(Table.from_pandas(df))
         hdu_list.append(hdu)
 
@@ -124,7 +143,7 @@ def fits2sparse_matrix(filename):
     Returns
     -------
     list:
-        the list of sparse matrix
+        row, col, (rps, pis)
     """
     dats = fits.open(filename)
     assert len(dats) == 5

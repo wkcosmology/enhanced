@@ -1,0 +1,27 @@
+version: 1
+formatters:
+  brief:
+    format: "%(asctime)s - %(message)s"
+  simple:
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  complete:
+    format: "%(asctime)s - %(levelname)s - %(lineno)d - %(funcName)s"
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: brief
+    level: INFO
+    stream: ext://sys.stdout
+  file:
+    class: logging.FileHandler
+    formatter: simple
+    level: INFO
+  complete:
+    class: logging.FileHandler
+    formatter: complete
+    level: DEBUG
+loggers:
+  log.basic:
+    handlers: [console, file]
+  log.debugging:
+    handlers: [console, complete]
