@@ -64,6 +64,33 @@ def sparse_mat_sum(mat, axis):
     return sum_vals.reshape(sum_vals.size)
 
 
+def counter2d_in_sparse_mat(int_arr_2d, shape=None):
+    """return the counts of integeral 2d coordinates
+
+    Parameters
+    ----------
+    int_arr_2d : TODO
+    shape : TODO
+
+    Returns
+    -------
+    TODO
+
+    """
+    assert int_arr_2d.shape[1] == 2
+    int_arr_2d = int_arr_2d.astype(int).copy()
+    if shape is None:
+        shape = tuple(np.max(int_arr_2d, axis=0) + 1)
+    assert len(shape) == 2
+    for i in [0, 1]:
+        if np.max(int_arr_2d.T[i]) > shape[i]:
+            raise Exception("length alongg axis-{0:d} of shape is too small".format(i))
+    count_mat = coo_matrix(
+        (np.ones(len(int_arr_2d)), (int_arr_2d.T[0], int_arr_2d.T[1])),
+        shape=shape)
+    return count_mat
+
+
 def in2d_index(row_1, col_1, row_2, col_2):
     """return a boolean array of index 1 is in index 2
 

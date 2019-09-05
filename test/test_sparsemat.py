@@ -1,4 +1,5 @@
 from enhanced.math.sparse_mat import index_mats_or
+from enhanced.math.sparse_mat import counter2d_in_sparse_mat
 from enhanced.math.sparse_mat import index_mats_and
 from enhanced.math.numpy import structured_array
 import numpy as np
@@ -28,3 +29,13 @@ def test_index_mats_and():
     index_return = structured_array([res_mat.row, res_mat.col], index_type)
     assert np.all(np.in1d(index_true, index_return))
     assert np.all(np.in1d(index_return, index_true))
+
+
+def test_counter2d():
+    coords = [[10, 11], [13, 14], [10, 11], [10, 11], [13, 14], [20, 1]]
+    count_mat = counter2d_in_sparse_mat(np.array(coords)).toarray()
+    print(count_mat)
+    assert count_mat.shape == (21, 15)
+    assert count_mat[10, 11] == 3
+    assert count_mat[13, 14] == 2
+    assert count_mat[20, 1] == 1

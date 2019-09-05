@@ -7,7 +7,6 @@
 import numpy as np
 from scipy.sparse import coo_matrix
 from halotools.mock_observables.pair_counters import pairwise_distance_xy_z
-from enhanced.tool.io import sparse_matrix2fits
 from halotools.mock_observables.pair_counters import pairwise_distance_3d
 from enhanced.tool.checker import check_columns_in_dataframe
 from grouptools.utilities.halo_model import HaloProfile
@@ -17,7 +16,7 @@ class SparseDistanceMatrix(object):
 
     """Creat a sparse distance sparse distance matrix"""
 
-    def __init__(self, row_pos, col_pos, rp_max, pi_max=None, dist_mats=None):
+    def __init__(self, row_pos, col_pos, rp_max=None, pi_max=None, dist_mats=None):
         """initilize the object
 
         Parameters
@@ -26,7 +25,7 @@ class SparseDistanceMatrix(object):
             the 3-d coordinates of the row points
         col_pos : array_like, shape(N, 3)
             the 3-d coordinates of the row points
-        rp_max : array_like, shape(N) or float
+        rp_max : array_like, shape(N) or float, optional
             the maximum value of searching radius in the projected direction
         pi_max : array_like, shape(N) or float, optional
             the maximum value of searching radius in the line-of-sight direction,
@@ -85,6 +84,29 @@ class SparseDistanceMatrix(object):
         shape = self._rps.shape
         self._rps = coo_matrix((rps_data, (self._row, self._col)), shape=shape).tocsr()
         self._pis = coo_matrix((pis_data, (self._row, self._col)), shape=shape).tocsr()
+
+    def mask(self, mask, inplace=False):
+        """update the sparse matrix using a boolean mask
+
+        Parameters
+        ----------
+        mask : array_like
+            the boolean mask
+        """
+        rps_data = self._rps.data[mask]
+        pis_data = self._pis.data[mask]
+        shape = self._rps.shape
+        if inplace:
+            self._row = self._row[mask]
+            self._col = self._col[mask]
+            self._rps = coo_matrix((rps_data, (self._row, self._col)), shape=shape).tocsr()
+            self._pis = coo_matrix((pis_data, (self._row, self._col)), shape=shape).tocsr()
+        else:
+            row = self._row[mask]
+            col = self._col[mask]
+            rps = coo_matrix((rps_data, (row, col)), shape=shape).tocsr()
+            pis = coo_matrix((rps_data, (row, col)), shape=shape).tocsr()
+            return SparseDistanceMatrix(self._row_pos, self._col_pos, dist_mats=(rps, pis))
 
     def copy(self, data):
         """make a copy of the sparse matrix with new data

@@ -5,6 +5,7 @@
 # Date            : 05.18.2019
 # Last Modified By: Kai Wang <wkcosmology@gmail.com>
 import numpy as np
+import warnings
 from cached_property import cached_property
 
 
@@ -29,13 +30,14 @@ def binned_stat(xs, ys, x_edges=None, num_bins=10, ret_std=True):
     contains [x coordinate, mean, std]
     """
     if x_edges is None:
-        x_edges = np.linspace(np.min(xs), np.max(xs), num_bins + 1)
+        x_edges = np.linspace(np.nanmin(xs), np.nanmax(xs), num_bins + 1)
     assert x_edges[0] < x_edges[1]
     mask = (xs >= x_edges[0]) & (xs < x_edges[-1])
     xs = xs[mask]
     ys = ys[mask]
     x_vals = (x_edges[1:] + x_edges[:-1]) / 2
     bin_ids = np.digitize(xs, x_edges) - 1
+    warnings.filterwarnings("ignore", message="Mean of empty slice")
     mean = np.array([np.nanmean(ys[bin_ids == i]) for i in range(len(x_vals))])
     if ret_std:
         std = np.array([np.nanstd(ys[bin_ids == i]) for i in range(len(x_vals))])
