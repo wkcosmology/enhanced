@@ -12,7 +12,7 @@ import pandas as pd
 from scipy.sparse import coo_matrix
 
 
-def data_frame2fits(filename, df, columns=None, units=None, comments=None):
+def data_frame2fits(filename, df, columns=None, indexs=None, units=None, comments=None):
     """write the data in pandas.DataFrame to a fits file
 
     Parameters
@@ -23,6 +23,8 @@ def data_frame2fits(filename, df, columns=None, units=None, comments=None):
         the dataframe contains the data
     columns : list, optional
         store the data into len(list) HDU blocks
+    indexs : list, optional
+        store the data into len(index) HDU blocks
     units : list, optional
         contains the unit for each column
     comments : dict, optional
@@ -30,8 +32,11 @@ def data_frame2fits(filename, df, columns=None, units=None, comments=None):
     """
     if columns is None:
         columns = [list(df.columns)]
+    if indexs is None:
+        indexs = [np.arange(len(df))]
+    assert not ((len(columns) > 1) and (len(index) > 1))
     if units is None or isinstance(units, str):
-        units = [units] * len(columns)
+        units = [units] * max(len(columns), len(indexs))
     assert isinstance(units, list)
 
     hdr = fits.Header()
@@ -41,8 +46,12 @@ def data_frame2fits(filename, df, columns=None, units=None, comments=None):
     primary_hdu = fits.PrimaryHDU(header=hdr)
     hdu_list = [primary_hdu]
 
-    for cs, us in zip(columns, units):
-        hdu_list.append(_table2hdu_units(Table.from_pandas(df[cs]), cs, us))
+    if len(columns) > 1:
+        for cs, us in zip(columns, units):
+            hdu_list.append(_table2hdu_units(Table.from_pandas(df.iloc[indexs[0]][cs]), cs, us))
+    else:
+        for index, us in zip(indexs, units):
+            hdu_list.append(_table2hdu_units(Table.from_pandas(df.iloc[index][columns[0]]), columns[0], us))
 
     hdul = fits.HDUList(hdu_list)
     hdul.writeto(filename)
@@ -72,13 +81,15 @@ def _table2hdu_units(table, colnames=None, units=None):
     return hdu
 
 
-def fits2data_frame(filename):
+def fits2data_frame(filename, hdu=None):
     """read the pandas data frame from a fits file
 
     Parameters
     ----------
     filename : str
         the filepath and name of the fits file
+    hdu : int
+        index of HDU to read
 
     Returns
     -------
@@ -86,7 +97,15 @@ def fits2data_frame(filename):
         the pandas dataframe in the fits file
 
     """
-    return Table.read(filename).to_pandas()
+    f = fits.open(filename)
+    if hdu is None and len(f) == 2:
+        return Table.read(filename).to_pandas()
+    elif hdu is None and len(f) >= 2:
+        return [Table.read(filename, hdu=i).to_pandas() for i in range(1, len(f))]
+    elif isinstance(hdu, int):
+        return Table.read(filename, hdu=hdu).to_pandas()
+    else:
+        return [Table.read(filename, hdu=i).to_pandas() for i in hdu]
 
 
 def sparse_matrix2fits(row_pos, col_pos, mat_list, filename, comments=None):

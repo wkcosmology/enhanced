@@ -9,7 +9,7 @@ import warnings
 from cached_property import cached_property
 
 
-def binned_stat(xs, ys, x_edges=None, num_bins=10, ret_std=True):
+def binned_stat(xs, ys, x_edges=None, num_bins=10, min_sample_size=None):
     """calculate the mean and standard error of ys in the bin of xs
 
     Parameters
@@ -22,8 +22,10 @@ def binned_stat(xs, ys, x_edges=None, num_bins=10, ret_std=True):
         the edges
     num_bins : int, optional
         number of bins, useful when x_edges is None
-    ret_std : boolean, optional
-        if return the standard error
+    min_sample_size : int or array-like
+        minimal sample size in each bin, if smaller than this quantity,
+        mean and std returned will be np.nan
+
     Returns
     -------
     return an array of shape (3, len(x_edges) - 1)
@@ -39,11 +41,12 @@ def binned_stat(xs, ys, x_edges=None, num_bins=10, ret_std=True):
     bin_ids = np.digitize(xs, x_edges) - 1
     warnings.filterwarnings("ignore", message="Mean of empty slice")
     mean = np.array([np.nanmean(ys[bin_ids == i]) for i in range(len(x_vals))])
-    if ret_std:
-        std = np.array([np.nanstd(ys[bin_ids == i]) for i in range(len(x_vals))])
-        return np.array([x_vals, mean, std])
-    else:
-        return np.array([x_vals, mean])
+    std = np.array([np.nanstd(ys[bin_ids == i]) for i in range(len(x_vals))])
+    if min_sample_size is not None:
+        counts = np.array([np.count_nonzero(bin_ids == i) for i in range(len(x_vals))])
+        mean[counts < min_sample_size] = np.nan
+        std[counts < min_sample_size] = np.nan
+    return np.array([x_vals, mean, std])
 
 
 def binned_percentile(xs, ys, x_edges=None, num_bins=10, percens=None):
