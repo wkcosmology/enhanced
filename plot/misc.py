@@ -35,7 +35,7 @@ def add_text(ax, x, y, s, fontdict=None, **kwargs):
     font_default = {
         "family": "sans-serif",
         "style": "normal",
-        "fontsize": 14}
+        "fontsize": 22}
     if fontdict is not None:
         font_default.update(fontdict)
     ax.text(x, y, s, fontdict=font_default, transform=ax.transAxes)
